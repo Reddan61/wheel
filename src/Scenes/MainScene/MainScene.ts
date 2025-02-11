@@ -8,16 +8,14 @@ import WheelBackground from "assets/wheel/wheelBackground.png";
 import WheelRaysBackground from "assets/wheel/wheelRaysBackground.png";
 import WheelParticle from "assets/wheel/particle.png";
 import Fortune from "assets/fortune.png";
-import {
-  IWinSceneData,
-  WIN_SCENE_DATA_KEYS,
-} from "src/Scenes/WinScene/WinScene";
+import { WinScene } from "src/Scenes/WinScene/WinScene";
 import { StartButton } from "src/Scenes/MainScene/StartButton";
 import { Wheel } from "src/Scenes/MainScene/Wheel/Wheel";
 import { Header } from "src/Scenes/MainScene/Header/Header";
 import { IPrize } from "src/Scenes/MainScene/Wheel/Prize/Prize";
 import { PRELOAD_IDS, SCENES_KEYS } from "src/utils";
 import { CONFIG_KEYS, getConfigValueByKey } from "src/config";
+import { LoseScene } from "src/Scenes/LoseScene";
 
 export class MainScene extends Phaser.Scene {
   private wheel: Wheel;
@@ -90,11 +88,9 @@ export class MainScene extends Phaser.Scene {
     this.startButton.show();
 
     if (prize.img) {
-      this.scene.launch(SCENES_KEYS.WIN_SCENE, {
-        [WIN_SCENE_DATA_KEYS.PRIZE]: prize,
-      } as IWinSceneData);
+      WinScene.launch(this, prize);
     } else {
-      this.scene.launch(SCENES_KEYS.LOSE_SCENE);
+      LoseScene.launch(this);
     }
   };
 

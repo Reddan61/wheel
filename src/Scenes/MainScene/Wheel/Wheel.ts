@@ -1,12 +1,13 @@
 import Phaser from "phaser";
 import { Particles } from "src/Scenes/MainScene/Wheel/Particles/Particles";
 import { IPrize, Prize } from "src/Scenes/MainScene/Wheel/Prize/Prize";
+import { NoAttemptsScene } from "src/Scenes/NoAttempts";
 import {
   CONFIG_KEYS,
   getConfigValueByKey,
   setConfigValueByKey,
 } from "src/config";
-import { PRELOAD_IDS, SCENES_KEYS } from "src/utils";
+import { PRELOAD_IDS } from "src/utils";
 
 export type TOnEndSpinCb = (prize: IPrize) => void;
 export type TOnStartSpinCb = () => void;
@@ -188,7 +189,7 @@ export class Wheel {
     const attempts = getConfigValueByKey(CONFIG_KEYS.ATTEMPTS);
 
     if (attempts <= 0) {
-      this.scene.scene.launch(SCENES_KEYS.NO_ATTEMPTS_SCENE);
+      NoAttemptsScene.launch(this.scene);
       return;
     } else {
       setConfigValueByKey(CONFIG_KEYS.ATTEMPTS, attempts - 1);

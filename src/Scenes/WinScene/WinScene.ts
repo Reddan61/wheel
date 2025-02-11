@@ -70,8 +70,18 @@ export class WinScene extends Phaser.Scene {
     this.subscribe();
   }
 
+  public static launch(scene: Phaser.Scene, prize: IPrize) {
+    scene.scene.launch(SCENES_KEYS.WIN_SCENE, {
+      [WIN_SCENE_DATA_KEYS.PRIZE]: prize,
+    } as IWinSceneData);
+  }
+
+  public static stop(scene: Phaser.Scene) {
+    scene.scene.stop(SCENES_KEYS.WIN_SCENE);
+  }
+
   private onBackgroundClick = () => {
-    this.scene.stop(SCENES_KEYS.WIN_SCENE);
+    WinScene.stop(this.scene.scene);
   };
 
   private onBackgroundAnimationComplited = () => {

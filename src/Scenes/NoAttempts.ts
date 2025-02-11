@@ -37,8 +37,16 @@ export class NoAttemptsScene extends Phaser.Scene {
     this.subscribe();
   }
 
+  public static launch(scene: Phaser.Scene) {
+    scene.scene.launch(SCENES_KEYS.NO_ATTEMPTS_SCENE);
+  }
+
+  public static stop(scene: Phaser.Scene) {
+    scene.scene.stop(SCENES_KEYS.NO_ATTEMPTS_SCENE);
+  }
+
   private onBackgroundClick = () => {
-    this.scene.stop(SCENES_KEYS.NO_ATTEMPTS_SCENE);
+    NoAttemptsScene.stop(this.scene.scene);
   };
 
   private onBackgroundAnimationComplited = () => {

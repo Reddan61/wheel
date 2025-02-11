@@ -36,8 +36,16 @@ export class LoseScene extends Phaser.Scene {
     this.subscribe();
   }
 
+  public static launch(scene: Phaser.Scene) {
+    scene.scene.launch(SCENES_KEYS.LOSE_SCENE);
+  }
+
+  public static stop(scene: Phaser.Scene) {
+    scene.scene.stop(SCENES_KEYS.LOSE_SCENE);
+  }
+
   private onBackgroundClick = () => {
-    this.scene.stop(SCENES_KEYS.LOSE_SCENE);
+    LoseScene.stop(this.scene.scene);
   };
 
   private onBackgroundAnimationComplited = () => {
