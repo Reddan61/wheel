@@ -3,6 +3,7 @@ import { SceneBackground } from "src/Scenes/SceneBackground/SceneBackground";
 import { SCENES_KEYS } from "src/utils";
 
 export class LoseScene extends Phaser.Scene {
+  private background: SceneBackground;
   private title: Phaser.GameObjects.Text;
 
   constructor() {
@@ -14,9 +15,7 @@ export class LoseScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale.gameSize;
 
-    new SceneBackground(this, () => {
-      this.scene.stop(SCENES_KEYS.LOSE_SCENE);
-    });
+    this.background = new SceneBackground(this);
 
     this.title = this.add.text(
       width / 2,
@@ -32,12 +31,30 @@ export class LoseScene extends Phaser.Scene {
         wordWrap: { width: 450 },
       }
     );
-    this.title.setOrigin(0.5);
+    this.title.setOrigin(0.5).setAlpha(0);
 
     this.subscribe();
   }
 
+  private onBackgroundClick = () => {
+    this.scene.stop(SCENES_KEYS.LOSE_SCENE);
+  };
+
+  private onBackgroundAnimationComplited = () => {
+    this.add.tween({
+      targets: this.title,
+      alpha: 1,
+      ease: "Linear",
+      duration: 1000,
+    });
+  };
+
   private subscribe() {
+    this.background.setOnClick(this.onBackgroundClick);
+    this.background.setOnBackgroundAnimationComplited(
+      this.onBackgroundAnimationComplited
+    );
+
     this.scale.on("resize", this.resize);
 
     this.events.once("shutdown", () => {

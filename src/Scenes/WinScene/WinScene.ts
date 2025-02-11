@@ -17,8 +17,17 @@ export enum WIN_SCENE_DATA_KEYS {
   PRIZE = "prize",
 }
 
+export interface IWinSceneData {
+  [WIN_SCENE_DATA_KEYS.PRIZE]: IPrize;
+}
+
 export class WinScene extends Phaser.Scene {
   private prize: IPrize;
+  private background: SceneBackground;
+  private winPrize: WinPrize;
+  private ribbon: Ribbon;
+  private confetti: Confetti;
+  private container: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: SCENES_KEYS.WIN_SCENE });
@@ -35,23 +44,56 @@ export class WinScene extends Phaser.Scene {
     this.load.image(PRELOAD_IDS.CONFETTI_4, Confetti4);
   }
 
-  init(data: { prize: IPrize }) {
+  init(data: IWinSceneData) {
     this.prize = data.prize;
   }
 
   create() {
-    new SceneBackground(this, () => {
-      this.scene.stop(SCENES_KEYS.WIN_SCENE);
+    this.background = new SceneBackground(this);
+
+    this.ribbon = new Ribbon(this, this.prize);
+
+    this.winPrize = new WinPrize(this, this.prize, () => {
+      this.ribbon.anim();
+      this.confetti.anim();
     });
 
-    const ribbon = new Ribbon(this, this.prize);
-    const winPrize = new WinPrize(
-      this,
-      new Phaser.Math.Vector2(0, ribbon.getHeight() + 150),
-      this.prize
-    );
-    ribbon.getContainer().addAt(winPrize.getContainer());
+    this.container = this.add.container(this.scale.gameSize.width / 2, 0);
 
-    new Confetti(this);
+    this.container.add([
+      this.winPrize.getContainer(),
+      this.ribbon.getContainer(),
+    ]);
+
+    this.confetti = new Confetti(this);
+
+    this.subscribe();
   }
+
+  private onBackgroundClick = () => {
+    this.scene.stop(SCENES_KEYS.WIN_SCENE);
+  };
+
+  private onBackgroundAnimationComplited = () => {
+    this.winPrize.anim();
+  };
+
+  private subscribe() {
+    this.background.setOnClick(this.onBackgroundClick);
+    this.background.setOnBackgroundAnimationComplited(
+      this.onBackgroundAnimationComplited
+    );
+
+    this.scale.on("resize", this.resize);
+
+    this.events.on("shutdown", () => {
+      this.scale.off("resize", this.resize);
+    });
+  }
+
+  private resize = () => {
+    const { width } = this.scale.gameSize;
+
+    this.container.setPosition(width / 2, 0);
+  };
 }

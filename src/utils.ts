@@ -1,8 +1,9 @@
 export enum PRELOAD_IDS {
   WHEEL_BACKGROUND = "wheel_background",
-  WHEEL_BACKGROUND_PARTICLES = "wheel_background_particles",
+  WHEEL_BACKGROUND_RAYS = "wheel_background_rays",
   WHEEL_SHADOW = "wheel_shadow",
   WHEEL_CIRCLE = "wheel_circle",
+  WHEEL_PARTICLE = "wheel_particle",
   PIN = "pin",
   PIN_LIGHT = "pin_light",
   PIN_SHADOW = "pin_shadow",

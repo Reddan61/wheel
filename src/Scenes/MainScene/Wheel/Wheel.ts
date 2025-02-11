@@ -1,6 +1,11 @@
 import Phaser from "phaser";
+import { Particles } from "src/Scenes/MainScene/Wheel/Particles/Particles";
 import { IPrize, Prize } from "src/Scenes/MainScene/Wheel/Prize/Prize";
-import { getAttempts, setAttempts } from "src/config";
+import {
+  CONFIG_KEYS,
+  getConfigValueByKey,
+  setConfigValueByKey,
+} from "src/config";
 import { PRELOAD_IDS, SCENES_KEYS } from "src/utils";
 
 export type TOnEndSpinCb = (prize: IPrize) => void;
@@ -12,7 +17,7 @@ export class Wheel {
   //ms
   private rotationTime = 5000;
   private startAngleCorrect: number;
-  private radius: number;
+  private radius = 454 / 2;
   private scene: Phaser.Scene;
   private position: Phaser.Math.Vector2;
   private backgroundImage: Phaser.GameObjects.Image;
@@ -20,23 +25,13 @@ export class Wheel {
   private wheelContainer: Phaser.GameObjects.Container;
   private prizes: IPrize[];
 
-  private onEndSpinCb: TOnEndSpinCb;
-  private onStartSpinCb: TOnStartSpinCb;
+  private onEndSpinCb = null as TOnEndSpinCb | null;
+  private onStartSpinCb = null as TOnStartSpinCb | null;
 
-  constructor(
-    scene: Phaser.Scene,
-    position: Phaser.Math.Vector2,
-    radius: number,
-    prizes: IPrize[],
-    onEndSpinCb: TOnEndSpinCb,
-    onStartSpinCb: TOnStartSpinCb
-  ) {
+  constructor(scene: Phaser.Scene, position: Phaser.Math.Vector2) {
     this.scene = scene;
     this.position = position;
-    this.radius = radius;
-    this.prizes = prizes;
-    this.onEndSpinCb = onEndSpinCb;
-    this.onStartSpinCb = onStartSpinCb;
+    this.prizes = getConfigValueByKey(CONFIG_KEYS.PRIZES);
 
     const startItemIndex = -2;
     const angleStep = 360 / this.prizes.length;
@@ -44,6 +39,14 @@ export class Wheel {
 
     this.create();
   }
+
+  public setOnStart = (cb: TOnStartSpinCb) => {
+    this.onStartSpinCb = cb;
+  };
+
+  public setOnEnd = (cb: TOnEndSpinCb) => {
+    this.onEndSpinCb = cb;
+  };
 
   public resize(x: number, y: number) {
     this.backgroundContainer.setPosition(x, y);
@@ -63,18 +66,15 @@ export class Wheel {
       this.position.y
     );
 
-    this.backgroundImage = this.scene.add.image(
-      0,
-      0,
-      PRELOAD_IDS.WHEEL_BACKGROUND_PARTICLES
-    );
+    this.backgroundImage = this.scene.add
+      .image(0, 0, PRELOAD_IDS.WHEEL_BACKGROUND_RAYS)
+      .setAlpha(0.15)
+      .setScale(0.7);
     const backgroundCircle = this.scene.add.image(
       0,
       0,
       PRELOAD_IDS.WHEEL_BACKGROUND
     );
-
-    this.backgroundContainer.add([this.backgroundImage, backgroundCircle]);
 
     const wheelCorrectedPosition = new Phaser.Math.Vector2(0.5, -5);
 
@@ -86,49 +86,13 @@ export class Wheel {
     wheel.fillStyle(this.color, 1);
 
     this.wheelContainer.add(wheel);
-    this.backgroundContainer.add(this.wheelContainer);
+    this.backgroundContainer.add([
+      this.backgroundImage,
+      backgroundCircle,
+      this.wheelContainer,
+    ]);
 
-    const prizesLength = this.prizes.length;
-    const angleStep = (2 * Math.PI) / prizesLength;
-
-    for (let i = 0; i < prizesLength; i++) {
-      const isOdd = i % 2 != 0;
-
-      const currentPrize = this.prizes[i];
-
-      const startAngle =
-        i * angleStep + Phaser.Math.DegToRad(this.startAngleCorrect);
-      const endAngle = startAngle + angleStep;
-      const middleAngle = (startAngle + endAngle) / 2;
-
-      const sectionColor = isOdd ? this.color : 0xc3d3fb;
-
-      const sectionColorGraphics = this.scene.add.graphics({
-        fillStyle: { color: sectionColor },
-      });
-      sectionColorGraphics.slice(0, 0, this.radius, startAngle, endAngle);
-      sectionColorGraphics.fillPath();
-
-      this.wheelContainer.add(sectionColorGraphics);
-
-      const offset = this.radius - this.radius / 3;
-
-      const prizePosition = new Phaser.Math.Vector2(
-        offset * Math.cos(middleAngle),
-        offset * Math.sin(middleAngle)
-      );
-
-      const prize = new Prize(
-        this.scene,
-        prizePosition,
-        middleAngle + Math.PI / 2,
-        this.radius,
-        isOdd ? "#FFFFFF" : "#0D42C1",
-        currentPrize
-      );
-
-      this.wheelContainer.add(prize.getElement());
-    }
+    this.createPrizes();
 
     const wheelShadow = this.scene.add.image(
       wheelCorrectedPosition.x,
@@ -162,13 +126,58 @@ export class Wheel {
       PRELOAD_IDS.PIN
     );
 
-    this.backgroundContainer.add([
-      wheelShadow,
-      pinShadow,
-      pinLight,
-      wheelCircle,
-      pin,
-    ]);
+    const particles = new Particles(
+      this.scene,
+      new Phaser.Math.Vector2(
+        this.backgroundImage.width * this.backgroundImage.scaleX,
+        this.backgroundImage.height * this.backgroundImage.scaleY
+      )
+    );
+
+    this.backgroundContainer
+      .add([wheelShadow, pinShadow, pinLight, wheelCircle, pin])
+      .addAt(particles.getElement(), 0);
+  }
+
+  private createPrizes() {
+    const prizesLength = this.prizes.length;
+    const angleStep = (2 * Math.PI) / prizesLength;
+
+    for (let i = 0; i < prizesLength; i++) {
+      const isOdd = i % 2 != 0;
+
+      const currentPrize = this.prizes[i];
+
+      const startAngle =
+        i * angleStep + Phaser.Math.DegToRad(this.startAngleCorrect);
+      const endAngle = startAngle + angleStep;
+      const middleAngle = (startAngle + endAngle) / 2;
+      const sectionColor = isOdd ? this.color : 0xc3d3fb;
+
+      const sectionColorGraphics = this.scene.add.graphics({
+        fillStyle: { color: sectionColor },
+      });
+      sectionColorGraphics.slice(0, 0, this.radius, startAngle, endAngle);
+      sectionColorGraphics.fillPath();
+
+      const offset = this.radius - this.radius / 3;
+
+      const prizePosition = new Phaser.Math.Vector2(
+        offset * Math.cos(middleAngle),
+        offset * Math.sin(middleAngle)
+      );
+
+      const prize = new Prize(
+        this.scene,
+        prizePosition,
+        middleAngle + Math.PI / 2,
+        this.radius,
+        isOdd ? "#FFFFFF" : "#0D42C1",
+        currentPrize
+      );
+
+      this.wheelContainer.add([sectionColorGraphics, prize.getElement()]);
+    }
   }
 
   public spin() {
@@ -176,13 +185,13 @@ export class Wheel {
       return;
     }
 
-    const attempts = getAttempts();
+    const attempts = getConfigValueByKey(CONFIG_KEYS.ATTEMPTS);
 
     if (attempts <= 0) {
       this.scene.scene.launch(SCENES_KEYS.NO_ATTEMPTS_SCENE);
       return;
     } else {
-      setAttempts(getAttempts() - 1);
+      setConfigValueByKey(CONFIG_KEYS.ATTEMPTS, attempts - 1);
     }
 
     this.reset();
@@ -210,12 +219,12 @@ export class Wheel {
       duration: this.rotationTime,
       ease: "Sine.easeInOut",
       onStart: () => {
-        this.onStartSpinCb();
+        this.onStartSpinCb?.();
       },
       onComplete: () => {
         this.canSpin = true;
         const prize = this.prizes[prizeIndex];
-        this.onEndSpinCb(prize);
+        this.onEndSpinCb?.(prize);
       },
     });
   }

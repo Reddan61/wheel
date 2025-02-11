@@ -1,5 +1,9 @@
 import Phaser from "phaser";
-import { attemptsSubscribe, getAttempts } from "src/config";
+import {
+  CONFIG_KEYS,
+  getConfigValueByKey,
+  setConfigValueByKey,
+} from "src/config";
 import { PRELOAD_IDS } from "src/utils";
 
 export class Counter {
@@ -51,7 +55,7 @@ export class Counter {
       .text(
         rectanglePosition.x + rectangleSize.x / 2,
         rectanglePosition.y + rectangleSize.y / 2,
-        String(getAttempts()),
+        String(getConfigValueByKey(CONFIG_KEYS.ATTEMPTS)),
         {
           fontSize: "bold 28px",
           color: "#003D6D",
@@ -66,12 +70,12 @@ export class Counter {
   }
 
   private subscribe() {
-    const unsub = attemptsSubscribe((attempts) => {
+    setConfigValueByKey(CONFIG_KEYS.ON_CHANGE_ATTEMPTS_CB, (attempts) => {
       this.count.setText(String(attempts));
     });
 
     this.scene.events.once("shutdown", () => {
-      unsub();
+      setConfigValueByKey(CONFIG_KEYS.ON_CHANGE_ATTEMPTS_CB, null);
     });
   }
 }

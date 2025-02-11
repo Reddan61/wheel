@@ -3,6 +3,7 @@ import { SceneBackground } from "src/Scenes/SceneBackground/SceneBackground";
 import { SCENES_KEYS } from "src/utils";
 
 export class NoAttemptsScene extends Phaser.Scene {
+  private background: SceneBackground;
   private title: Phaser.GameObjects.Text;
 
   constructor() {
@@ -12,9 +13,7 @@ export class NoAttemptsScene extends Phaser.Scene {
   }
 
   create() {
-    new SceneBackground(this, () => {
-      this.scene.stop(SCENES_KEYS.NO_ATTEMPTS_SCENE);
-    });
+    this.background = new SceneBackground(this);
 
     const { width, height } = this.scale;
 
@@ -33,11 +32,30 @@ export class NoAttemptsScene extends Phaser.Scene {
       }
     );
     this.title.setOrigin(0.5);
+    this.title.setAlpha(0);
 
     this.subscribe();
   }
 
+  private onBackgroundClick = () => {
+    this.scene.stop(SCENES_KEYS.NO_ATTEMPTS_SCENE);
+  };
+
+  private onBackgroundAnimationComplited = () => {
+    this.add.tween({
+      targets: this.title,
+      alpha: 1,
+      ease: "Linear",
+      duration: 1000,
+    });
+  };
+
   private subscribe() {
+    this.background.setOnClick(this.onBackgroundClick);
+    this.background.setOnBackgroundAnimationComplited(
+      this.onBackgroundAnimationComplited
+    );
+
     this.scale.on("resize", this.resize);
 
     this.events.once("shutdown", () => {

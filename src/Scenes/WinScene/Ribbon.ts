@@ -19,21 +19,21 @@ export class Ribbon {
     return this.container;
   }
 
-  public getHeight() {
-    return this.container.y + this.ribbon.height / 2;
+  public anim() {
+    this.scene.tweens.add({
+      targets: this.container,
+      alpha: 1,
+      duration: 1000,
+      ease: "Linear",
+    });
   }
 
   private create() {
-    const { width } = this.scene.scale.gameSize;
-
     const starsTexture = this.scene.textures
       .get(PRELOAD_IDS.WIN_STARS)
       .getSourceImage();
 
-    this.container = this.scene.add.container(
-      width / 2,
-      starsTexture.height / 2
-    );
+    this.container = this.scene.add.container(0, starsTexture.height / 2);
 
     const stars = this.scene.add.image(0, 0, PRELOAD_IDS.WIN_STARS);
     stars.setOrigin(0.5);
@@ -59,7 +59,7 @@ export class Ribbon {
 
     ribbonContainer.add([this.ribbon, ribbonText]);
 
-    this.container.add([stars, ribbonContainer]);
+    this.container.add([stars, ribbonContainer]).setAlpha(0);
 
     this.subscribe();
   }
@@ -73,12 +73,10 @@ export class Ribbon {
   }
 
   private resize = () => {
-    const { width } = this.scene.scale;
-
     const starsTexture = this.scene.textures
       .get(PRELOAD_IDS.WIN_STARS)
       .getSourceImage();
 
-    this.container.setPosition(width / 2, starsTexture.height / 2);
+    this.container.setPosition(0, starsTexture.height / 2);
   };
 }
